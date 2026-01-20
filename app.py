@@ -7,22 +7,22 @@ import os
 import json
 import random
 import time
+import base64
 
 # ==========================================
 # ⚙️ CONFIGURATION & CONSTANTS
 # ==========================================
-PAGE_TITLE = "PROJECT UTOPIA // COMMAND"
+PAGE_TITLE = "PROJECT UTOPIA"
 PAGE_ICON = "🪐"
 DATA_FILE = 'mission_data.csv'
 TODO_FILE = 'todo_list.json'
 BOOKS_FILE = 'library_status.json'
 JOURNAL_FILE = 'journal_entries.json'
 
-GOAL_MONEY = 400000  # QAR Target (ZL1 + C6 + Freedom)
+GOAL_MONEY = 400000  # QAR
 CURRENCY = "QAR"
-START_DATE = date(2026, 1, 1) # Assumed start of mission
 
-# TRAVIS SCOTT / UTOPIA LYRIC BANK
+# TRAVIS SCOTT / UTOPIA LYRIC BANK (EXPANDED)
 LYRICS = [
     "The situation we are in at this time, neither a good one, nor is it so unblest.",
     "It can be held that we are in the process of creating a new world.",
@@ -59,38 +59,55 @@ TOXIC_QUOTES = [
     "Do you want to be a boss or a worker? Decide.",
     "Pain is temporary. Being broke is forever if you don't move.",
     "Zero revenue today? Then you are unemployed.",
-    "Your ideas are worthless. Your execution is everything.",
 ]
 
-# LIBRARY & PODCASTS
+# THE LIBRARY
 REQUIRED_READING = [
-    "48 Laws of Power", "Influence: The Psychology of Persuasion", "Concise Mastery",
-    "The Art of War", "Atomic Habits", "The Laws of Human Nature",
-    "33 Strategies of War", "The Art of Seduction", "Meditations"
+    "48 Laws of Power",
+    "Influence: The Psychology of Persuasion",
+    "Concise Mastery",
+    "The Art of War",
+    "Atomic Habits",
+    "The Laws of Human Nature",
+    "33 Strategies of War",
+    "The Art of Seduction",
+    "Meditations"
 ]
 
+# THE PODCASTS (UPDATED)
 REQUIRED_LISTENING = {
     "Alex Hormozi": "The Game (Business Strategy & Acquisition)",
     "Lex Fridman": "Deep Tech, AI & High-Level Discourse",
     "My First Million": "Market Gaps & Business Ideas",
     "Huberman Lab": "Biological Optimization (Sleep/Focus)",
-    "Modern Wisdom": "Human Nature, Psychology & Evolution (Chris Williamson)"
+    "Modern Wisdom (Chris Williamson)": "Human Nature, Psychology & Evolution"
 }
 
 # ==========================================
 # 🛠️ DATA ENGINE
 # ==========================================
+
 def init_files():
+    """Initialize data files if they don't exist."""
     if not os.path.exists(DATA_FILE):
-        df = pd.DataFrame(columns=["Date", "Cold_Calls", "Deep_Work_Hrs", "Calories", "Workouts", "Money_In", "Sleep_Hrs", "Reading_Pages", "Notes"])
+        df = pd.DataFrame(columns=[
+            "Date", "Cold_Calls", "Deep_Work_Hrs", 
+            "Calories", "Workouts", "Money_In", "Sleep_Hrs", "Reading_Pages", "Notes"
+        ])
         df.to_csv(DATA_FILE, index=False)
+    
     if not os.path.exists(TODO_FILE):
-        with open(TODO_FILE, 'w') as f: json.dump([], f)
+        with open(TODO_FILE, 'w') as f:
+            json.dump([], f)
+            
     if not os.path.exists(BOOKS_FILE):
         books_db = {book: {"status": "Not Started", "progress": 0} for book in REQUIRED_READING}
-        with open(BOOKS_FILE, 'w') as f: json.dump(books_db, f)
+        with open(BOOKS_FILE, 'w') as f:
+            json.dump(books_db, f)
+
     if not os.path.exists(JOURNAL_FILE):
-        with open(JOURNAL_FILE, 'w') as f: json.dump([], f)
+        with open(JOURNAL_FILE, 'w') as f:
+            json.dump([], f)
 
 def load_data(): return pd.read_csv(DATA_FILE)
 def save_log_entry(entry):
@@ -98,21 +115,21 @@ def save_log_entry(entry):
     entry_df = pd.DataFrame([entry])
     df = pd.concat([df, entry_df], ignore_index=True)
     df.to_csv(DATA_FILE, index=False)
+
 def load_json(file):
-    try:
-        with open(file, 'r') as f: return json.load(f)
-    except: return [] # Fail safe
+    with open(file, 'r') as f: return json.load(f)
 def save_json(file, data):
     with open(file, 'w') as f: json.dump(data, f)
 
 init_files()
 
 # ==========================================
-# 🎨 UI & CSS
+# 🎨 UI & CSS (UTOPIA AESTHETIC)
 # ==========================================
 st.set_page_config(page_title=PAGE_TITLE, layout="wide", page_icon=PAGE_ICON)
 
-# INJECT SCRIPTS & STYLES
+# JAVASCRIPT FOR LYRIC ROTATION
+# We inject a script that finds the element and updates it every 60s
 lyrics_json = json.dumps(LYRICS)
 st.markdown(f"""
 <script>
@@ -128,16 +145,13 @@ st.markdown(f"""
     }}
     setInterval(updateLyric, 60000);
 </script>
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-    
-    :root {{
-        --neon-purple: #d8b4fe;
-        --neon-red: #ff4b4b;
-        --glass-bg: rgba(20, 20, 20, 0.6);
-        --glass-border: rgba(255, 255, 255, 0.1);
-    }}
+""", unsafe_allow_html=True)
 
+st.markdown(f"""
+    <style>
+    /* --- GLOBAL RESET & FONTS --- */
+    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+    
     html, body, [class*="css"] {{
         font-family: 'Inter', sans-serif;
         background-color: #050505;
@@ -145,33 +159,56 @@ st.markdown(f"""
         overflow-x: hidden;
     }}
     
+    /* --- ANIMATED BACKGROUND --- */
     .stApp {{
         background: radial-gradient(circle at 50% -20%, #2e003e 0%, #000000 50%),
                     radial-gradient(circle at 80% 80%, #1a0b2e 0%, #000000 40%);
         background-attachment: fixed;
     }}
+    
+    /* Floating Debris Animation */
+    @keyframes float {{
+        0% {{ transform: translateY(0px) rotate(0deg); opacity: 0.3; }}
+        50% {{ transform: translateY(-20px) rotate(10deg); opacity: 0.6; }}
+        100% {{ transform: translateY(0px) rotate(0deg); opacity: 0.3; }}
+    }}
 
-    /* ARTIFACT CARDS */
+    /* --- ARTIFACT CARDS (3D EFFECT) --- */
     .artifact-card {{
-        background: var(--glass-bg);
+        background: rgba(20, 20, 20, 0.6);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         position: relative;
         overflow: hidden;
     }}
     
+    /* Holographic Hover */
     .artifact-card:hover {{
-        border-color: rgba(216, 180, 254, 0.3);
-        box-shadow: 0 0 20px rgba(100, 0, 255, 0.1);
-        transform: translateY(-2px);
+        transform: perspective(1000px) rotateX(2deg) translateY(-5px);
+        box-shadow: 0 20px 40px -10px rgba(168, 85, 247, 0.2);
+        border-color: rgba(168, 85, 247, 0.5);
+    }}
+    
+    .artifact-card::before {{
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        transition: 0.5s;
+    }}
+    
+    .artifact-card:hover::before {{
+        left: 100%;
     }}
 
-    /* TYPOGRAPHY */
+    /* --- TYPOGRAPHY --- */
     h1 {{
         font-family: 'Syncopate', sans-serif;
         font-weight: 700;
@@ -179,7 +216,8 @@ st.markdown(f"""
         background: linear-gradient(180deg, #fff, #888);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 3.5rem !important;
+        font-size: 4rem !important;
+        text-shadow: 0 0 30px rgba(255,255,255,0.1);
     }}
     
     h2, h3 {{
@@ -187,365 +225,324 @@ st.markdown(f"""
         color: #fff;
         font-weight: 700;
         letter-spacing: 1px;
-        font-size: 1.2rem;
     }}
     
-    .mono {{ font-family: 'JetBrains Mono', monospace; }}
-    .highlight {{ color: var(--neon-purple); font-weight: bold; }}
-    .alert {{ color: var(--neon-red); font-weight: bold; }}
+    #lyric-display {{
+        font-family: 'Courier New', monospace;
+        color: #d8b4fe;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+        opacity: 0.8;
+        transition: opacity 0.5s ease;
+        border-left: 2px solid #d8b4fe;
+        padding-left: 10px;
+    }}
 
-    /* METRICS */
+    /* --- METRICS --- */
     div[data-testid="stMetricValue"] {{
         font-family: 'Syncopate', sans-serif;
-        font-size: 32px;
+        font-size: 36px;
         color: #fff;
-        text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+        text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
     }}
     
     div[data-testid="stMetricLabel"] {{
-        font-family: 'JetBrains Mono', monospace;
-        color: #888;
-        font-size: 11px;
-        letter-spacing: 1px;
+        color: #9ca3af;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 2px;
     }}
 
-    /* BUTTONS & INPUTS */
-    .stButton > button {{
-        background: #000;
-        border: 1px solid var(--neon-purple);
-        color: var(--neon-purple);
-        font-family: 'Syncopate', sans-serif;
-        font-weight: 700;
-        text-transform: uppercase;
-        transition: 0.3s;
-    }}
-    .stButton > button:hover {{
-        background: var(--neon-purple);
-        color: #000;
-        box-shadow: 0 0 15px var(--neon-purple);
+    /* --- INPUTS --- */
+    .stTextInput > div > div, .stNumberInput > div > div, .stTextArea > div > div {{
+        background-color: rgba(0, 0, 0, 0.3);
+        border: 1px solid #333;
+        color: white;
+        border-radius: 8px;
     }}
     
-    .stTextInput > div > div, .stNumberInput > div > div {{
-        background: rgba(0,0,0,0.5);
-        border: 1px solid #333;
-        color: #fff;
+    .stTextInput > div > div:focus-within {{
+        border-color: #d8b4fe;
+        box-shadow: 0 0 15px rgba(216, 180, 254, 0.2);
+    }}
+    
+    /* --- BUTTONS --- */
+    .stButton > button {{
+        background: #000;
+        border: 1px solid #d8b4fe;
+        color: #d8b4fe;
+        padding: 0.6rem 1.2rem;
+        border-radius: 4px;
+        font-family: 'Syncopate', sans-serif;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+    }}
+    
+    .stButton > button:hover {{
+        background: #d8b4fe;
+        color: #000;
+        box-shadow: 0 0 20px rgba(216, 180, 254, 0.6);
     }}
 
-    /* TAB STYLING */
-    .stTabs [data-baseweb="tab-list"] {{ gap: 8px; }}
+    /* --- TABS --- */
     .stTabs [data-baseweb="tab"] {{
-        background-color: rgba(255,255,255,0.03);
-        border: 1px solid transparent;
-        border-radius: 4px;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: 'Syncopate', sans-serif;
         font-size: 12px;
+        background-color: rgba(255,255,255,0.02);
     }}
     .stTabs [aria-selected="true"] {{
-        border: 1px solid var(--neon-purple) !important;
-        color: var(--neon-purple) !important;
+        background-color: rgba(168, 85, 247, 0.1) !important;
+        border: 1px solid #a855f7 !important;
+        color: #a855f7 !important;
     }}
-</style>
-""", unsafe_allow_html=True)
+
+    </style>
+    """, unsafe_allow_html=True)
 
 # ==========================================
-# 🧠 HELPERS
+# 🧠 HELPER FUNCTIONS
 # ==========================================
-def get_random_lyric(): return random.choice(LYRICS)
-def get_toxic_quote(): return random.choice(TOXIC_QUOTES)
+def get_random_lyric():
+    return random.choice(LYRICS)
+
+def get_toxic_quote():
+    return random.choice(TOXIC_QUOTES)
 
 # ==========================================
-# 🏠 HEADER
+# 🏠 MAIN LAYOUT
 # ==========================================
-c_head1, c_head2 = st.columns([5, 1])
+
+# HEADER SECTION
+c_head1, c_head2 = st.columns([4, 1])
 with c_head1:
     st.markdown(f"<h1>PROJECT UTOPIA</h1>", unsafe_allow_html=True)
-    st.markdown(f"<div id='lyric-display' class='mono' style='color: #d8b4fe; border-left: 2px solid #d8b4fe; padding-left: 10px;'>🎧 {get_random_lyric()}</div>", unsafe_allow_html=True)
+    # The ID 'lyric-display' is targeted by the JS above
+    st.markdown(f"<div id='lyric-display'>🎧 {get_random_lyric()}</div>", unsafe_allow_html=True)
 
 with c_head2:
+    st.write("")
     st.write("")
     if st.button("💀 REALITY CHECK"):
         st.toast(get_toxic_quote(), icon="⚡")
 
-# TABS
-tab_dash, tab_plan, tab_log, tab_journal, tab_tasks, tab_arsenal = st.tabs([
-    "📊 COMMAND", "🗺️ BATTLE PLAN", "📝 LOGS", "📓 JOURNAL", "✅ OPS", "📚 ARSENAL"
+# NAVIGATION TABS
+tab_dash, tab_journal, tab_log, tab_tasks, tab_arsenal, tab_protocol = st.tabs([
+    "📊 DASHBOARD", 
+    "📓 JOURNAL",
+    "📝 LOGS", 
+    "✅ OPS", 
+    "📚 ARSENAL", 
+    "🗺️ PLAN"
 ])
 
 # ==========================================
-# 📊 TAB 1: COMMAND CENTER (IMPROVED)
+# 📊 TAB 1: DASHBOARD
 # ==========================================
 with tab_dash:
     df = load_data()
-    
-    # --- CALCULATION ENGINE ---
     total_money = df['Money_In'].sum() if not df.empty else 0
     money_remaining = GOAL_MONEY - total_money
-    days_elapsed = (date.today() - START_DATE).days
-    if days_elapsed <= 0: days_elapsed = 1
+    progress_pct = min(total_money / GOAL_MONEY, 1.0)
     
-    # Win Rate: % of days where user did > 2 hrs deep work OR made calls OR worked out
-    if not df.empty:
-        active_days = df[
-            (df['Deep_Work_Hrs'] >= 2) | 
-            (df['Cold_Calls'] > 0) | 
-            (df['Workouts'] == 1)
-        ].shape[0]
-        total_logged_days = df.shape[0]
-        win_rate = (active_days / total_logged_days * 100) if total_logged_days > 0 else 0
-    else:
-        win_rate = 0
-    
-    # Burn Rate needed
-    days_left_in_year = 365 - (date.today().timetuple().tm_yday)
-    daily_target = money_remaining / days_left_in_year if days_left_in_year > 0 else 0
-
-    # --- ROW 1: STATUS & FINANCE ---
-    c1, c2, c3 = st.columns([1.5, 1, 1])
-    
-    with c1:
-        st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown(f"### ⚔️ WAR CHEST: {total_money:,.0f} / {GOAL_MONEY:,.0f} {CURRENCY}")
-        prog = min(total_money / GOAL_MONEY, 1.0)
-        st.progress(prog)
-        st.caption(f"{prog*100:.2f}% COMPLETED")
-        
-        mc1, mc2 = st.columns(2)
-        mc1.metric("LIQUID CASH", f"{total_money:,.0f}", delta="GENERATED")
-        mc2.metric("REMAINING GAP", f"{money_remaining:,.0f}", delta_color="inverse")
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    with c2:
-        st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown("### 🚦 SYSTEM STATUS")
-        st.metric("WIN RATE (CONSISTENCY)", f"{win_rate:.1f}%", delta="AIM FOR 90%+")
-        status_color = "#00ff00" if win_rate > 80 else "#ff4b4b"
-        st.markdown(f"<div style='font-size: 12px; color: {status_color};'>SYSTEM INTEGRITY: {'OPTIMAL' if win_rate > 80 else 'COMPROMISED'}</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c3:
-        st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown("### 🔥 BURN RATE")
-        st.metric("REQ. DAILY PROFIT", f"{daily_target:,.0f} {CURRENCY}", delta="TO HIT TARGET")
-        st.caption(f"You must net {daily_target:,.0f} QAR every single day until Dec 31.")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # --- ROW 2: IMMEDIATE INTEL ---
-    c_intel1, c_intel2 = st.columns([2, 1])
-    
-    with c_intel1:
-        st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown("### ⚠️ PRIORITY DIRECTIVES")
-        todos = load_json(TODO_FILE)
-        active_todos = [t for t in todos if not t['done']]
-        if active_todos:
-            for i, t in enumerate(active_todos[:3]): # Show top 3
-                st.markdown(f"<div style='border-bottom: 1px solid #333; padding: 8px 0;'>◻️ <span class='mono'>{t['task']}</span></div>", unsafe_allow_html=True)
-            if len(active_todos) > 3:
-                st.caption(f"...and {len(active_todos)-3} more in OPS tab.")
-        else:
-            st.markdown("*No active directives. You are drifting. Go to OPS.*")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c_intel2:
-        st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown("### 🧬 LAST LOG")
-        if not df.empty:
-            last = df.iloc[-1]
-            st.markdown(f"**DATE:** {last['Date']}")
-            st.markdown(f"**CALLS:** {last['Cold_Calls']}")
-            st.markdown(f"**DEEP WORK:** {last['Deep_Work_Hrs']} HRS")
-            st.markdown(f"**REVENUE:** {last['Money_In']} {CURRENCY}")
-        else:
-            st.warning("NO DATA FOUND.")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# ==========================================
-# 🗺️ TAB 2: DETAILED BATTLE PLAN
-# ==========================================
-with tab_plan:
     st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-    st.markdown("## 🗺️ OPERATIONAL BLUEPRINT: Q1 2026")
-    st.markdown("This is not a suggestion. This is the script. Deviate and you fail.")
+    st.markdown(f"### 🎯 TARGET: {GOAL_MONEY:,.0f} {CURRENCY}")
+    st.progress(progress_pct)
+    
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("LIQUID CASH", f"{total_money:,.0f}", delta="QAR")
+    c2.metric("REMAINING", f"{money_remaining:,.0f}", delta_color="inverse")
+    
+    # Days left in year calculation
+    days_left = (date(2027, 1, 1) - date.today()).days
+    c3.metric("TIME REMAINING", f"{days_left} DAYS", delta="HURRY UP")
+    
+    c4.metric("STATUS", "ACTIVE" if total_money > 0 else "STAGNANT", delta="UTOPIA")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PHASE 1
-    st.markdown("### 🗓️ PHASE 1: FEB 2026 (FOUNDATION & VALIDATION)")
-    
-    with st.expander("WEEK 1: THE IDENTITY SHIFT & OFFER", expanded=True):
-        st.markdown("""
-        **OBJECTIVE:** Establish the vessel. Define the offer.
-        - [ ] **LEGAL/ADMIN:** Separate Personal vs Business finances (Wise/Bank).
-        - [ ] **BRAND:** "The Hustler" Persona Launch. Post 1 High-Quality Reel/TikTok (Cinematic, dark).
-        - [ ] **OFFER:** Define the "AI Support Agent" package. (Setup Fee: 2000 QAR, Retainer: 500 QAR).
-        - [ ] **DATA:** Scrape 50 leads (Qatar SMEs: Gyms, Real Estate, Clinics) using Google Maps.
-        - [ ] **TECH:** Build a 'Dummy' Agent on Replit/Voiceflow just to show a demo.
-        """)
-
-    with st.expander("WEEK 2: AGGRESSIVE OUTREACH"):
-        st.markdown("""
-        **OBJECTIVE:** Break the silence. Get rejected.
-        - [ ] **KPI:** 100 Cold DMs/Emails sent. 20 Cold Calls made.
-        - [ ] **SCRIPT:** A/B Test 2 scripts. (1. Direct Pitch, 2. Value-First/Free Audit).
-        - [ ] **MEETINGS:** Book 3 Demos.
-        - [ ] **CONTENT:** Document the struggle. "Day 7: Getting rejected by 10 CEOs."
-        """)
-
-    with st.expander("WEEK 3: FIRST BLOOD"):
-        st.markdown("""
-        **OBJECTIVE:** Proof of Concept. Money changes hands.
-        - [ ] **CLOSE:** Sign Client #1. (Even if you have to discount, get the case study).
-        - [ ] **DELIVERY:** Deploy the agent for Client #1. Ensure 99% uptime.
-        - [ ] **SYSTEM:** Create a "Client Onboarding" checklist so you don't panic next time.
-        """)
+    # Charts
+    st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
+    st.markdown("### 📈 TRAJECTORY ARTIFACT")
+    if not df.empty:
+        df['Date'] = pd.to_datetime(df['Date'])
+        chart_df = df.sort_values('Date')
         
-    with st.expander("WEEK 4: REFINEMENT"):
-        st.markdown("""
-        **OBJECTIVE:** Iron out bugs. Collect testimonial.
-        - [ ] **REVIEW:** Fix bugs in Client #1's agent.
-        - [ ] **SOCIAL PROOF:** Get a video testimonial from Client #1.
-        - [ ] **OUTREACH:** Use the testimonial to hit 50 new leads. "We did X for [Client Name], we can do it for you."
-        """)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=chart_df['Date'], y=chart_df['Money_In'], 
+            fill='tozeroy', mode='lines+markers', name='Revenue',
+            line=dict(color='#d8b4fe', width=3),
+            marker=dict(size=8, color='#fff', line=dict(width=2, color='#d8b4fe'))
+        ))
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ccc', family="Inter"),
+            xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)'),
+            height=300, margin=dict(l=0, r=0, t=10, b=0)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("NO DATA. SYSTEM WAITING.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    # PHASE 2
-    st.markdown("---")
-    st.markdown("### 🗓️ PHASE 2: MAR 2026 (SYSTEMIZATION & SCALE)")
+# ==========================================
+# 📓 TAB 2: JOURNAL (NEW)
+# ==========================================
+with tab_journal:
+    st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
+    st.markdown("### 🧠 MIND DUMP")
+    st.markdown("Write freely. Clear the noise. Strategize.")
     
-    with st.expander("WEEK 5: AUTOMATION"):
-        st.markdown("""
-        **OBJECTIVE:** Remove yourself from the loop.
-        - [ ] **TECH:** Build a Python script to scrape leads automatically.
-        - [ ] **HIRE:** Find a commission-only setter or a cheap VA for data entry.
-        - [ ] **PRICE:** Raise Setup Fee to 4,000 QAR.
-        """)
-
-    with st.expander("WEEK 6-8: VELOCITY"):
-        st.markdown("""
-        **OBJECTIVE:** Velocity.
-        - [ ] **KPI:** 10k QAR/Month Run Rate.
-        - [ ] **INPUT:** 200 Leades contacted per week.
-        - [ ] **BRAND:** "How I run an AI Agency in Qatar" (Long form YouTube).
-        """)
+    with st.form("journal_form", clear_on_submit=True):
+        j_title = st.text_input("Entry Title", placeholder="e.g., The Vision for March...")
+        j_content = st.text_area("Content", height=200, placeholder="Pour it out...")
+        j_submit = st.form_submit_button("SAVE TO ARCHIVE")
+        
+        if j_submit and j_title and j_content:
+            entries = load_json(JOURNAL_FILE)
+            new_entry = {
+                "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M")),
+                "title": j_title,
+                "content": j_content
+            }
+            entries.insert(0, new_entry) # Add to top
+            save_json(JOURNAL_FILE, entries)
+            st.success("ENTRY ENCRYPTED.")
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Display Entries
+    entries = load_json(JOURNAL_FILE)
+    if entries:
+        for ent in entries:
+            with st.expander(f"📓 {ent['timestamp']} | {ent['title']}"):
+                st.markdown(f"_{ent['content']}_")
+    else:
+        st.info("The archive is empty.")
 
 # ==========================================
 # 📝 TAB 3: LOGS
 # ==========================================
 with tab_log:
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown("### 📝 INPUT TERMINAL")
-        with st.form("log_form", clear_on_submit=True):
-            date_in = st.date_input("Date", date.today())
-            calls = st.number_input("Calls/DMs", min_value=0)
-            money = st.number_input(f"Revenue ({CURRENCY})", min_value=0.0)
-            deep = st.number_input("Deep Work (Hrs)", min_value=0.0, step=0.5)
+    st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
+    st.markdown("### 📝 TACTICAL INPUT")
+    with st.form("main_log_form", clear_on_submit=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            l_date = st.date_input("Date", date.today())
+            l_calls = st.number_input("Cold Calls", min_value=0)
+            l_money = st.number_input("Money In", min_value=0.0)
+            l_deep = st.number_input("Deep Work (Hrs)", min_value=0.0, step=0.5)
+        with c2:
+            l_cal = st.number_input("Calories", min_value=0)
+            l_sleep = st.number_input("Sleep (Hrs)", min_value=0.0)
+            l_read = st.number_input("Pages Read", min_value=0)
+            l_workout = st.checkbox("Workout Done?")
+            l_notes = st.text_input("Short Note")
             
-            st.markdown("---")
-            cal = st.number_input("Calories", min_value=0)
-            sleep = st.number_input("Sleep (Hrs)", min_value=0.0)
-            read = st.number_input("Pages Read", min_value=0)
-            workout = st.checkbox("Workout Complete?")
-            note = st.text_input("Debrief Note")
-            
-            if st.form_submit_button("COMMIT ENTRY"):
-                save_log_entry({
-                    "Date": date_in, "Cold_Calls": calls, "Deep_Work_Hrs": deep,
-                    "Calories": cal, "Workouts": 1 if workout else 0,
-                    "Money_In": money, "Sleep_Hrs": sleep, "Reading_Pages": read, "Notes": note
-                })
-                st.toast("ENTRY SAVED.", icon="💾")
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    with c2:
-        st.markdown("### 🗄️ DATABASE")
-        st.dataframe(df.sort_values('Date', ascending=False), use_container_width=True, height=500)
+        if st.form_submit_button("LOG DATA"):
+            save_log_entry({
+                "Date": l_date, "Cold_Calls": l_calls, "Deep_Work_Hrs": l_deep,
+                "Calories": l_cal, "Workouts": 1 if l_workout else 0,
+                "Money_In": l_money, "Sleep_Hrs": l_sleep, "Reading_Pages": l_read, "Notes": l_notes
+            })
+            st.toast("LOGGED.", icon="💾")
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.dataframe(df.sort_values('Date', ascending=False), use_container_width=True)
 
 # ==========================================
-# 📓 TAB 4: JOURNAL
-# ==========================================
-with tab_journal:
-    st.markdown("### 🧠 NEURAL DUMP")
-    
-    with st.form("journal_entry"):
-        title = st.text_input("Subject Line")
-        body = st.text_area("Content", height=150)
-        if st.form_submit_button("ENCRYPT THOUGHT"):
-            if title and body:
-                entries = load_json(JOURNAL_FILE)
-                entries.insert(0, {"time": str(datetime.now())[:16], "title": title, "body": body})
-                save_json(JOURNAL_FILE, entries)
-                st.rerun()
-
-    entries = load_json(JOURNAL_FILE)
-    for ent in entries:
-        with st.expander(f"{ent['time']} | {ent['title']}"):
-            st.markdown(ent['body'])
-
-# ==========================================
-# ✅ TAB 5: OPS (TASKS)
+# ✅ TAB 4: OPS
 # ==========================================
 with tab_tasks:
-    st.markdown("### ⚔️ TACTICAL OPS")
+    st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
+    st.markdown("### ⚔️ DIRECTIVES")
     
-    c_add, c_list = st.columns([1, 2])
-    with c_add:
-        st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        new_task = st.text_input("New Directive", placeholder="e.g. Call TDT...")
-        if st.button("ADD DIRECTIVE"):
+    col_in, col_btn = st.columns([4, 1])
+    with col_in:
+        new_task = st.text_input("New Task", placeholder="Execute order...", label_visibility="collapsed")
+    with col_btn:
+        if st.button("ADD"):
             if new_task:
                 todos = load_json(TODO_FILE)
                 todos.append({"task": new_task, "done": False})
                 save_json(TODO_FILE, todos)
                 st.rerun()
+                
+    todos = load_json(TODO_FILE)
+    if todos:
+        for i, todo in enumerate(todos):
+            done = st.checkbox(todo['task'], value=todo['done'], key=f"t_{i}")
+            if done != todo['done']:
+                todos[i]['done'] = done
+                save_json(TODO_FILE, todos)
+                st.rerun()
+        
         if st.button("PURGE COMPLETED"):
-            todos = load_json(TODO_FILE)
             todos = [t for t in todos if not t['done']]
             save_json(TODO_FILE, todos)
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c_list:
-        todos = load_json(TODO_FILE)
-        if todos:
-            for i, todo in enumerate(todos):
-                done = st.checkbox(todo['task'], value=todo['done'], key=f"todo_{i}")
-                if done != todo['done']:
-                    todos[i]['done'] = done
-                    save_json(TODO_FILE, todos)
-                    st.rerun()
-        else:
-            st.info("NO ACTIVE DIRECTIVES.")
+    else:
+        st.markdown("*No active directives.*")
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 📚 TAB 6: ARSENAL
+# 📚 TAB 5: ARSENAL
 # ==========================================
 with tab_arsenal:
-    c_read, c_listen = st.columns(2)
+    c_b, c_p = st.columns(2)
     
-    with c_read:
+    with c_b:
         st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown("### 📘 CODEX")
+        st.markdown("### 📘 CODEX (BOOKS)")
         books = load_json(BOOKS_FILE)
-        for b_name in REQUIRED_READING:
-            if b_name not in books: books[b_name] = {"status": "Not Started", "progress": 0}
-            b_data = books[b_name]
+        for title in REQUIRED_READING:
+            if title not in books: books[title] = {"status": "Not Started", "progress": 0}
+            b = books[title]
             
-            with st.expander(f"{b_name} ({b_data['progress']}%)"):
-                s = st.selectbox("Status", ["Not Started", "Reading", "Absorbed"], 
-                               index=["Not Started", "Reading", "Absorbed"].index(b_data.get('status', "Not Started")), key=f"s_{b_name}")
-                p = st.slider("Progress", 0, 100, b_data.get('progress', 0), key=f"p_{b_name}")
-                
-                if s != b_data.get('status') or p != b_data.get('progress'):
-                    books[b_name] = {"status": s, "progress": p}
+            with st.expander(f"{title} ({b['progress']}%)"):
+                s = st.selectbox("Status", ["Not Started", "Reading", "Done"], key=f"s_{title}", 
+                               index=["Not Started", "Reading", "Done"].index(b['status'] if b['status'] in ["Not Started", "Reading", "Done"] else "Not Started"))
+                p = st.slider("Progress", 0, 100, b['progress'], key=f"p_{title}")
+                if s != b['status'] or p != b['progress']:
+                    books[title] = {"status": s, "progress": p}
                     save_json(BOOKS_FILE, books)
                     st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
         
-    with c_listen:
+    with c_p:
         st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
-        st.markdown("### 🎙️ INTEL STREAMS")
-        for pod, desc in REQUIRED_LISTENING.items():
-            st.markdown(f"**{pod}**")
-            st.caption(desc)
-            st.markdown("---")
+        st.markdown("### 🎙️ SIGNAL INTERCEPT (PODCASTS)")
+        for name, desc in REQUIRED_LISTENING.items():
+            st.markdown(f"""
+            <div style='margin-bottom: 15px; border-left: 2px solid #d8b4fe; padding-left: 10px;'>
+                <div style='font-weight: 700; color: #fff;'>{name}</div>
+                <div style='font-size: 12px; color: #888;'>{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
+# ==========================================
+# 🗺️ TAB 6: PLAN
+# ==========================================
+with tab_protocol:
+    st.markdown("<div class='artifact-card'>", unsafe_allow_html=True)
+    st.markdown("## 🗓️ Q1 2026: THE BLUEPRINT")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("### PHASE 1 (FEB)")
+        st.markdown("""
+        * [ ] **ID:** Launch "Hustler" Persona.
+        * [ ] **OPS:** 50 Cold DMs.
+        * [ ] **TECH:** Build AI Agent MVP (Voiceflow).
+        * [ ] **WIN:** 1st Client Signed.
+        """)
+    with c2:
+        st.markdown("### PHASE 2 (MAR)")
+        st.markdown("""
+        * [ ] **SCALE:** Hire VA for Leads.
+        * [ ] **AUTO:** Automate Fulfillment.
+        * [ ] **MONEY:** Hit 10k QAR/Month.
+        """)
+    st.markdown("</div>", unsafe_allow_html=True)
