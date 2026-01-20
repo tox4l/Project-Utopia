@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
+
 from datetime import datetime, date, timedelta
 import os
 import json
@@ -958,3 +958,4 @@ with tab_protocol:
         st.markdown(f"- {o}")
 
     st.markdown("</div>", unsafe_allow_html=True)
+
